@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Application/">
+    <Project Path="Company.Application.Main/Company.Application.Main.csproj" />
+    <Project Path="Company.Application.Share/Company.Application.Share.csproj" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="Company.Core/Company.Core.csproj" />
+    <Project Path="Company.Logger/Company.Logger.csproj" />
+    <Project Path="Company.UI/Company.UI.csproj" />
+  </Folder>
+  <Folder Name="/Database/" />
+  <Folder Name="/Hardware/" />
+  <Project Path="Shell/Shell.csproj" />
+</Solution>
