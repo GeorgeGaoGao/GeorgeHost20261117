@@ -10,7 +10,7 @@ namespace Company.Application.Main
     {
         public void OnInitialized(IContainerProvider containerProvider)
         {
-            containerProvider.Resolve<IRegionManager>().RegisterViewWithRegion<MainView>(RegionNames.MainRegion);
+            //containerProvider.Resolve<IRegionManager>().RegisterViewWithRegion<MainView>(RegionNames.MainRegion);
         }
 
         public void RegisterTypes(IContainerRegistry containerRegistry)

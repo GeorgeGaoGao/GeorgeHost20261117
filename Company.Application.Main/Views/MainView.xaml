@@ -4,6 +4,7 @@
              xmlns:prism="http://prismlibrary.com/"             
              prism:ViewModelLocator.AutoWireViewModel="True">
     <Grid>
-         <TextBlock Text="Main View" FontSize="50" Foreground="Orange"/>
+         <TextBlock Text="Main View" FontSize="30" Foreground="Orange"/>
+        <Button  Content="button" FontSize="24" Width="200" Height="50"/>
     </Grid>
 </UserControl>

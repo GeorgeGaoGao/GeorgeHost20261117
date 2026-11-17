@@ -1,0 +1,24 @@
+﻿<UserControl x:Class="Company.Application.Login.Views.LoginView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:prism="http://prismlibrary.com/"             
+             prism:ViewModelLocator.AutoWireViewModel="True">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Company.UI;component/Style/Generic.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" Text="&#xf164;" FontFamily="{StaticResource FontAwesome}" 
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   FontSize="100"  Foreground="DarkOrange"/>
+        <TextBlock Grid.Column="1" Text="Login..." FontSize="30" Foreground="DarkGreen"/>
+    </Grid>
+</UserControl>

@@ -1,6 +1,7 @@
 ﻿using Company.Application.Share.Prism;
 using Prism.Ioc;
 using Prism.Modularity;
+using Prism.Navigation.Regions;
 using Shell.Views;
 using System.Windows;
 
@@ -18,6 +19,13 @@ namespace Shell
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
+
+        }
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+            var regionManager = Container.Resolve<IRegionManager>();
+            regionManager.RequestNavigate(RegionNames.MainRegion, "LoginView");
 
         }
         protected override IModuleCatalog CreateModuleCatalog()

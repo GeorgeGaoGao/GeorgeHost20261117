@@ -9,5 +9,6 @@ namespace Company.Application.Share.Prism
     {
         //public const string ModulePath = @".\Modules";
         public static readonly string ModulePath=Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Modules");
+        public const string ApplicationLoginModule = "ApplicationLoginModule";
     }
 }
