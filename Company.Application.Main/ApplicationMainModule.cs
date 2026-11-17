@@ -1,8 +1,10 @@
 ﻿using Company.Application.Main.Views;
 using Company.Application.Share.Prism;
+using Company.Core.Extension;
 using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Navigation.Regions;
+using System.Reflection;
 
 namespace Company.Application.Main
 {
@@ -15,7 +17,7 @@ namespace Company.Application.Main
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
-
+            containerRegistry.RegisterAssembly(Assembly.GetExecutingAssembly());
         }
     }
 }

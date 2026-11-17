@@ -11,6 +11,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Company.Application.Share\Company.Application.Share.csproj" />
+    <ProjectReference Include="..\Company.Core\Company.Core.csproj" />
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Shell\bin\$(Configuration)\$(TargetFramework)\Modules\&quot; /Y" />
