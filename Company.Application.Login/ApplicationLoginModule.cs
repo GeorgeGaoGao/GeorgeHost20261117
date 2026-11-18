@@ -7,6 +7,7 @@ using Prism.Navigation.Regions;
 namespace Company.Application.Login
 {
     [Module(ModuleName = ModuleNames.ApplicationLoginModule, OnDemand = false)]
+   
     public class ApplicationLoginModule : IModule
     {
         public void OnInitialized(IContainerProvider containerProvider)

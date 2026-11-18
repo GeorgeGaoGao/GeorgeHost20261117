@@ -14,4 +14,8 @@
     <PackageReference Include="ReactiveUI.WPF" Version="27.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Company.Application.Share\Company.Application.Share.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -8,16 +8,21 @@ using System.Reflection;
 
 namespace Company.Application.Main
 {
+    [Module(ModuleName =ModuleNames.ApplicationMainModule,OnDemand =true)]
+    [ModuleDependency(ModuleNames.ApplicationLoginModule)]
     public class ApplicationMainModule : IModule
     {
         public void OnInitialized(IContainerProvider containerProvider)
         {
             //containerProvider.Resolve<IRegionManager>().RegisterViewWithRegion<MainView>(RegionNames.MainRegion);
+            containerProvider.Resolve<IRegionManager>().RequestNavigate(RegionNames.MainRegion, nameof(MainView));
+
         }
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.RegisterAssembly(Assembly.GetExecutingAssembly());
+            containerRegistry.RegisterForNavigation<MainView>();
         }
     }
 }
