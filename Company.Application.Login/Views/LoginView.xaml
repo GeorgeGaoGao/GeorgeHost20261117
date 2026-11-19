@@ -19,6 +19,20 @@
         <TextBlock Grid.Column="0" Text="&#xf164;" FontFamily="{StaticResource FontAwesome}" 
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    FontSize="100"  Foreground="DarkOrange"/>
-        <TextBlock Grid.Column="1" Text="Login..." FontSize="30" Foreground="DarkGreen"/>
+        <StackPanel Grid.Column="1">
+            <TextBlock  Text="Login..." FontSize="30" Foreground="DarkGreen"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="姓名"/>
+                <TextBox Text="{Binding CurrentUser.Name,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="密码"/>
+                <TextBox Text="{Binding CurrentUser.Password,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+            </StackPanel>
+            <Button Content="Login" Width="100" Height="20" Command="{Binding LoginCommand}"/>
+        </StackPanel>
+        
+      
+        
     </Grid>
 </UserControl>

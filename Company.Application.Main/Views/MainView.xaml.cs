@@ -11,5 +11,7 @@ namespace Company.Application.Main.Views
         {
             InitializeComponent();
         }
+
+     
     }
 }

@@ -21,7 +21,7 @@ namespace Company.Application.Main
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            containerRegistry.RegisterAssembly(Assembly.GetExecutingAssembly());
+            containerRegistry.RegisterExposedServiceTypesForAssembly(Assembly.GetExecutingAssembly());
             containerRegistry.RegisterForNavigation<MainView>();
         }
     }

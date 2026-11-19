@@ -14,14 +14,14 @@ namespace Company.Core.Extension
         /// </summary>
         /// <param name="containerRegistry"></param>
         /// <param name="assembly"></param>
-        public static void RegisterAssembly(this IContainerRegistry containerRegistry, Assembly assembly)
+        public static void RegisterExposedServiceTypesForAssembly(this IContainerRegistry containerRegistry, Assembly assembly)
         {
-            IEnumerable<Type> list = GetAssemblyTypes(assembly);
+            IEnumerable<Type> list = GetExposedServiceTypesFromAssembly(assembly);
 
             foreach (var type in list)
             {
-                //用一个重载，把一个type注册进容器。
-                RegisterAssembly(containerRegistry, type);
+                //把一个type注册进容器。
+                RegisterOneType(containerRegistry, type);
             }
         }
         /// <summary>
@@ -29,7 +29,7 @@ namespace Company.Core.Extension
         /// </summary>
         /// <param name="assembly"></param>
         /// <returns></returns>
-        private static IEnumerable<Type> GetAssemblyTypes(Assembly assembly)
+        private static IEnumerable<Type> GetExposedServiceTypesFromAssembly(Assembly assembly)
         {
             
             return assembly.GetTypes().Where
@@ -41,11 +41,11 @@ namespace Company.Core.Extension
         }
 
         /// <summary>
-        /// RegisterAssembly的重载方法。把一个type注册进容器。
+        /// 把一个type注册进容器。
         /// </summary>
         /// <param name="containerRegistry"></param>
         /// <param name="type"></param>
-        private static void RegisterAssembly(IContainerRegistry containerRegistry, Type type)
+        private static void RegisterOneType(IContainerRegistry containerRegistry, Type type)
         {
             //找出该类上所有的ExposedServiceAttribute实例。
             var attributeList = type.GetCustomAttributes<ExposedServiceAttribute>();
@@ -78,12 +78,12 @@ namespace Company.Core.Extension
         /// </summary>
         /// <param name="containerProvider"></param>
         /// <param name="assembly"></param>
-        public static void InitializeAssembly(this IContainerProvider containerProvider,Assembly assembly)
+        public static void InitializeExposedServiceTypesForAssembly(this IContainerProvider containerProvider,Assembly assembly)
         {
-            IEnumerable<Type> typeList = GetAssemblyTypes(assembly);
+            IEnumerable<Type> typeList = GetExposedServiceTypesFromAssembly(assembly);
             foreach (var type in typeList)
             {
-                InitializeAssembly(containerProvider, type);
+                InitializeOneType(containerProvider, type);
             }
         }
         /// <summary>
@@ -92,7 +92,7 @@ namespace Company.Core.Extension
         /// <param name="containerProvider"></param>
         /// <param name="type"></param>
         /// <exception cref="NotImplementedException"></exception>
-        private static void InitializeAssembly(IContainerProvider containerProvider, Type type)
+        private static void InitializeOneType(IContainerProvider containerProvider, Type type)
         {
             var attributeList = type.GetCustomAttributes<ExposedServiceAttribute>();
             foreach (var attribute in attributeList)

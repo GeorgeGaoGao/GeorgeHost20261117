@@ -12,12 +12,13 @@ namespace Company.Application.Login
     {
         public void OnInitialized(IContainerProvider containerProvider)
         {
-            
+            containerProvider.Resolve<IRegionManager>().RequestNavigate(RegionNames.MainRegion, nameof(LoginView));
         }
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.RegisterForNavigation<LoginView>();
+            
         }
     }
 }

@@ -20,10 +20,10 @@ namespace Company.Core.IOC
             ModuleManager = moduleManager;
         }
 
-        public IContainerExtension Container { get; }
-        public IRegionManager RegionManager { get; }
-        public IEventAggregator EventAggregator { get;  }
-        public IDialogService DialogService { get;  }
-        public IModuleManager ModuleManager { get;  }
+        public static IContainerExtension Container { get; private set; }
+        public static IRegionManager RegionManager { get; private set; }
+        public static IEventAggregator EventAggregator { get; private set; }
+        public static IDialogService DialogService { get; private set; }
+        public static IModuleManager ModuleManager { get; private set; }
     }
 }

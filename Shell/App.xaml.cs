@@ -25,9 +25,7 @@ namespace Shell
         protected override void OnInitialized()
         {
             base.OnInitialized();
-            var regionManager = Container.Resolve<IRegionManager>();
-            regionManager.RequestNavigate(RegionNames.MainRegion, "LoginView");
-            Container.Resolve<IModuleManager>().LoadModule(ModuleNames.ApplicationMainModule);
+            Container.Resolve<IModuleManager>().LoadModule(ModuleNames.ApplicationLoginModule);
 
         }
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
@@ -38,14 +36,16 @@ namespace Shell
                 {
                     ModuleName = ModuleNames.CoreModule,
                     ModuleType = typeof(CoreModule).AssemblyQualifiedName,
-                    InitializationMode = InitializationMode.OnDemand
+                    //InitializationMode = InitializationMode.OnDemand
                 }
                 );
         }
         protected override IModuleCatalog CreateModuleCatalog()
         {
 
-            return new DirectoryModuleCatalog() { ModulePath = ModuleNames.ModulePath };
+            var temp= new DirectoryModuleCatalog() { ModulePath = ModuleNames.ModulePath };
+            var tempNull = temp == null;
+            return temp;
         }
     }
 }

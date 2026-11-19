@@ -7,17 +7,17 @@ using System.Text;
 
 namespace Company.Core
 {
-    [Module(ModuleName=ModuleNames.CoreModule,OnDemand =true)]
+    [Module(ModuleName=ModuleNames.CoreModule)]
     public class CoreModule : IModule
     {
         public void OnInitialized(IContainerProvider containerProvider)
         {
-            containerProvider.InitializeAssembly(Assembly.GetExecutingAssembly());
+            containerProvider.InitializeExposedServiceTypesForAssembly(Assembly.GetExecutingAssembly());
         }
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            containerRegistry.RegisterAssembly(Assembly.GetExecutingAssembly());
+            containerRegistry.RegisterExposedServiceTypesForAssembly(Assembly.GetExecutingAssembly());
         }
     }
 }
