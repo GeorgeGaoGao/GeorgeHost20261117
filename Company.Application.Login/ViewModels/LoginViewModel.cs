@@ -1,5 +1,6 @@
-﻿using Company.Application.Share.Event;
-using Company.Application.Share.Model;
+﻿using Company.Applications.Share.Event;
+using Company.Applications.Share.Model;
+using Company.Core.Dialog;
 using Company.Core.IOC;
 using Prism.Commands;
 using Prism.Mvvm;
@@ -10,7 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 
-namespace Company.Application.Login.ViewModels
+namespace Company.Applications.Login.ViewModels
 {
     public class LoginViewModel : ReactiveObject
     {
@@ -27,11 +28,16 @@ namespace Company.Application.Login.ViewModels
         {
             if (string.IsNullOrEmpty(CurrentUser.Name) || string.IsNullOrEmpty(CurrentUser.Password))
             {
+                PopupBox.ShowPopup("用户名或密码不能为空");
                 return;
             }
             if (CurrentUser.Name == "Admin" && CurrentUser.Password == "123456")
             {
                 PrismProvider.EventAggregator.GetEvent<LoginSuccessEvent>().Publish(CurrentUser);
+            }
+            else
+            {
+                PopupBox.ShowPopup("用户名或密码错误");
             }
         }
     }

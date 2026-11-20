@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace Company.Application.Main.Views
+namespace Company.Applications.Main.Views
 {
     /// <summary>
     /// Interaction logic for MainView

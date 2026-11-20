@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace Company.Application.Login.Views
+namespace Company.Applications.Login.Views
 {
     /// <summary>
     /// Interaction logic for LoginView

@@ -1,5 +1,5 @@
-﻿using Company.Application.Login.Views;
-using Company.Application.Share.Prism;
+﻿using Company.Applications.Login.Views;
+using Company.Applications.Share.Prism;
 using Company.Core.Extension;
 using Prism.Ioc;
 using Prism.Modularity;

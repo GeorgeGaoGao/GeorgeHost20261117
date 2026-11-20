@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Company.Application.Share.Prism
+namespace Company.Applications.Share.Prism
 {
     public class ModuleNames
     {

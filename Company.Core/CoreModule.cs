@@ -1,4 +1,4 @@
-﻿using Company.Application.Share.Prism;
+﻿using Company.Applications.Share.Prism;
 using Company.Core.Extension;
 using System;
 using System.Collections.Generic;

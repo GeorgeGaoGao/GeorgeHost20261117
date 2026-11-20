@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="Company.Applications.Share.Model.ToastPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Company.Applications.Share.Model"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <!-- 居中显示；想贴在窗口底部可改 Placement="Bottom" + VerticalOffset -->
+        <!-- 圆角/半透明背景必需 -->
+        <!-- 由代码控制关闭，而不是点击后自动关 -->
+        <Popup x:Name="RootPopup"
+               Placement="Center" 
+               AllowsTransparency="True"
+               StaysOpen="True">
+
+            <!-- 不拦截鼠标，点击会穿透到下面的界面 -->
+            <Border Background="#CC202020"
+                    CornerRadius="8"
+                    Padding="20,12"
+                    IsHitTestVisible="False"
+                    Opacity="{Binding ToastOpacity, Mode=OneWay}">
+
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="12" ShadowDepth="1" Opacity="0.3" Color="Black"/>
+                </Border.Effect>
+
+                <TextBlock Text="{Binding Message}"
+                           Foreground="White"
+                           FontSize="14"
+                           TextWrapping="Wrap"
+                           MaxWidth="360"
+                           TextAlignment="Center"/>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

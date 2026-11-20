@@ -1,6 +1,6 @@
-﻿using Company.Application.Share.Event;
-using Company.Application.Share.Model;
-using Company.Application.Share.Prism;
+﻿using Company.Applications.Share.Event;
+using Company.Applications.Share.Model;
+using Company.Applications.Share.Prism;
 using Company.Core.IOC;
 using Prism.Commands;
 using Prism.Events;

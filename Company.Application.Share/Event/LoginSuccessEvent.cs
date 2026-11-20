@@ -1,9 +1,9 @@
-﻿using Company.Application.Share.Model;
+﻿using Company.Applications.Share.Model;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Company.Application.Share.Event
+namespace Company.Applications.Share.Event
 {
     public class LoginSuccessEvent:PubSubEvent<CurrentUser>
     {

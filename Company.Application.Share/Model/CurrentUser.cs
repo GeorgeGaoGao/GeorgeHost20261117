@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
-namespace Company.Application.Share.Model
+namespace Company.Applications.Share.Model
 {
     public class CurrentUser
     {

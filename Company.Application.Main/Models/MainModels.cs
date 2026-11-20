@@ -7,7 +7,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Company.Application.Main.Models
+namespace Company.Applications.Main.Models
 {
     /// <summary>
     /// 继承了一个带观察者的接口，别的模块就可以从IOC中以接口的方法，得到当前类型的实例

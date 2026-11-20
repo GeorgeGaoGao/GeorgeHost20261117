@@ -5,7 +5,7 @@
         xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         prism:ViewModelLocator.AutoWireViewModel="True" FontSize="24"
-        xmlns:share="clr-namespace:Company.Application.Share.Prism;assembly=Company.Application.Share" xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:share="clr-namespace:Company.Applications.Share.Prism;assembly=Company.Application.Share" xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
                  Title="{Binding Title}" Height="350" Width="525" >
 
     <mah:MetroWindow.LeftWindowCommands>
