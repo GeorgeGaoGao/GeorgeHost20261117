@@ -89,7 +89,10 @@ namespace Company.Core.Dialog
         private static void ShowCore(string text, TimeSpan duration)
         {
             var dialog = _dialog ??= new DSPopup();//UI线程运行保证了这个实例由UI线程创建，谁创建谁使用。
-            if (dialog.Child is not UIElement) return;
+            if (dialog.Child is not UIElement) return;//这个判断放在这里比放在present里更好，
+                                                      //简单直接。语义上也说得通，创建实例后补足信息。之后的present只
+                                                      //用编排处理方法就行了。
+
             dialog.Message = text;//补足实例的显示信息。
 
             dialog.Present(duration);//后续不再需要用到text,后续方法都是实例方法，不用担心实例为空。
