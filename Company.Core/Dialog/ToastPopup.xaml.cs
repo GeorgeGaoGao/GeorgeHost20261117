@@ -26,8 +26,8 @@ namespace Company.Core.Dialog
         //===============可调参数======================
         //不变，事实上是常量，用PASCAL命名。
         private static readonly TimeSpan MinVisible = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan FadeInTime = TimeSpan.FromMilliseconds(500);
-        private static readonly TimeSpan FadeOutTime = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan FadeInTime = TimeSpan.FromMilliseconds(2000);
+        private static readonly TimeSpan FadeOutTime = TimeSpan.FromMilliseconds(2000);
         //===============单例状态======================
         private static ToastPopup? _dialog;
         //===============实例状态======================
@@ -61,14 +61,23 @@ namespace Company.Core.Dialog
         //===============参数规整======================
         private static bool TryNormalizeParameters(string message, TimeSpan timeSpan, out string text, out TimeSpan duration)
         {
-            text = message;
-            duration = timeSpan;
-            return true;
+            text = message?.Trim() ?? string.Empty;
+            duration = timeSpan < MinVisible ? MinVisible : timeSpan;
+            return text.Length > 0;
         }
         //===============UI线程======================
         private static void RunOnUiThread(Action action)
         {
-            action();
+            var app = Application.Current;
+            if (app == null) return;
+            var dispatcher = app.Dispatcher;
+            if (dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished) return;
+
+            if (dispatcher.CheckAccess()) action();
+            else
+            {
+                dispatcher.BeginInvoke(action, DispatcherPriority.Normal);
+            }
         }
 
         //===============单例实例======================
@@ -93,7 +102,7 @@ namespace Company.Core.Dialog
             ScheduleHide(token, duration);
         }
 
-       
+
 
 
 
@@ -182,7 +191,7 @@ namespace Company.Core.Dialog
             {
                 EasingFunction = new QuadraticEase()
                 {
-                    EasingMode = from > to ? EasingMode.EaseOut : EasingMode.EaseIn//Easein缓动发生在开头，easeout缓动发生在结尾。
+                    EasingMode = from < to ? EasingMode.EaseOut : EasingMode.EaseIn//Easein缓动发生在开头，easeout缓动发生在结尾。
                 }
             };
             if (onCompleted != null) animation.Completed += (s, e) => onCompleted();
@@ -191,7 +200,7 @@ namespace Company.Core.Dialog
         //===============计时隐藏======================
         private void ScheduleHide(int token, TimeSpan duration)
         {
-            if (_hideTimer==null)
+            if (_hideTimer == null)
             {
                 _hideTimer = new DispatcherTimer(DispatcherPriority.Normal);
                 _hideTimer.Tick += OnHideTick;//在创建时加上事件处理方法，只用加这一次。
