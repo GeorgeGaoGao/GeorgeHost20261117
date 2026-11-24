@@ -41,7 +41,8 @@ namespace Company.Applications.Login.ViewModels
                 //GeorgePopup.Show("用户名或密码错误",TimeSpan.FromSeconds(2));
                 //MyPopup.ShowPopup("用户名或密码错误");
                 //DSPopup.Show("用户名或密码错误",TimeSpan.FromSeconds(2));
-                ToastPopup.Show("用户名或密码错误",TimeSpan.FromSeconds(2));
+                //ToastPopup.Show("用户名或密码错误",TimeSpan.FromSeconds(2));
+                DSPopup.Show("用户名或密码错误",TimeSpan.FromSeconds(2));
             }
         }
     }

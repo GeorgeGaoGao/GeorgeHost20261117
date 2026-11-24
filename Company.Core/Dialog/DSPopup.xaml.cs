@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Numerics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,136 +18,219 @@ using System.Windows.Threading;
 namespace Company.Core.Dialog
 {
     /// <summary>
-    /// 全局复用的轻量提示框。
-    ///
-    /// 相对最初版本的关键改动：
-    /// 1. 文本绑定改成构造函数里显式 Source，不再依赖 RelativeSource FindAncestor；
-    /// 2. 不再依赖 Application.Current / MainWindow：没有 WPF 窗口时退化为屏幕坐标，保证一定显示；
-    /// 3. 淡出用 DoubleAnimation，重复调用会打断上一次动画并复位透明度；
-    /// 4. 定时器在 UI 线程懒创建，不是静态字段初始化；
-    /// 5. 失败不再静默：写 Debug 输出（XAML 解析失败、Child 为空等）。
+    /// DSPopup.xaml 的交互逻辑
     /// </summary>
     public partial class DSPopup : Popup
     {
+        //===================可调参数=======================
+        private static TimeSpan MinVisible = TimeSpan.FromSeconds(1);
+        private static TimeSpan FadeInTime = TimeSpan.FromMilliseconds(500);
+        private static TimeSpan FadeOutTime = TimeSpan.FromMilliseconds(500);
+        //===================单例状态=======================
         private static DSPopup? _dialog;
-        private static DispatcherTimer? _hideTimer;
+        //===================实例状态=======================
+        private int _generation;
+        private int _pendingToken;
+        private DispatcherTimer? _hideTimer;
+        //===================依赖属性=======================
+
+
+        public string Message
+        {
+            get { return (string)GetValue(MessageProperty); }
+            set { SetValue(MessageProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for Message.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty MessageProperty =
+            DependencyProperty.Register(nameof(Message), typeof(string), typeof(DSPopup), new PropertyMetadata(string.Empty));
+
+
+
         public DSPopup()
         {
             InitializeComponent();
-            // 显式 Source：Popup 的内容会被托管到独立窗口，FindAncestor/DataContext 的解析链路
-            // 依赖逻辑树细节；这里直接指定源，任何宿主下都能显示文字。
-            MessageText.SetBinding(TextBlock.TextProperty, new Binding(nameof(Message)) { Source = this });
+            this.DataContext = this;
+            StaysOpen = true;//不会因范围外占击鼠标而关闭。
         }
-        public string Message
+        //===================对外契约=======================
+        public static void Show(string message, TimeSpan timeSpan)
         {
-            get => (string)GetValue(MessageProperty);
-            set => SetValue(MessageProperty, value);
+            if (!TryNormalizeParameters(message, timeSpan, out string text, out TimeSpan duration)) return;
+            RunOnUiThread(() => ShowCore(text, duration));
         }
-        public static readonly DependencyProperty MessageProperty =
-            DependencyProperty.Register(nameof(Message), typeof(string), typeof(DSPopup),
-                new PropertyMetadata(string.Empty));
-        // 兼容旧调用：DSPopup.ShowPopup("保存成功", 2)
-        public static void ShowPopup(string message, int seconds = 2)
+        //===================尝试规整参数=======================
+        private static bool TryNormalizeParameters(string message, TimeSpan timeSpan, out string text, out TimeSpan duration)
         {
-            Show(message, TimeSpan.FromSeconds(Math.Max(1, seconds)));
+            text = message?.Trim() ?? string.Empty;
+            duration = timeSpan > MinVisible ? timeSpan : MinVisible;
+            return text.Length > 0;
         }
-        /// <summary>
-        /// 显示提示。可从任意线程、任意时机调用（包括还没有任何窗口的时候）。
-        /// </summary>
-        /// <param name="message">提示文本。</param>
-        /// <param name="duration">停留时长（含淡出前的全显示时间）。</param>
-        public static void Show(string message, TimeSpan duration)
+
+        //===================UI线程运行=======================
+        private static void RunOnUiThread(Action action)
         {
-            if (string.IsNullOrEmpty(message)) return;
-            if (duration <= TimeSpan.Zero) duration = TimeSpan.FromSeconds(2);
-            // Application 可能为 null（WinForms 宿主 / 控制台 / 单元测试）
-            var dispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
+            if (action == null) throw new ArgumentNullException(nameof(action));
+
+            var app = Application.Current;
+            if (app == null) return;
+
+            var dispatcher = app.Dispatcher;
             if (dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished) return;
-            if (dispatcher.CheckAccess())
-            {
-                ShowCore(message, duration);
-            }
+
+            if (dispatcher.CheckAccess()) action();
             else
             {
-                // 异步切线程：不阻塞调用方，也不会和 UI 线程互等
-                dispatcher.BeginInvoke(new Action(() => ShowCore(message, duration)), DispatcherPriority.Normal);
+                dispatcher.BeginInvoke(action, DispatcherPriority.Normal);
             }
         }
-        private static void ShowCore(string message, TimeSpan duration)
+
+        //===================建立实例=======================
+        private static void ShowCore(string text, TimeSpan duration)
         {
-            try
-            {
-                var popup = _dialog ??= new DSPopup();
-                if (popup.Child is not UIElement child)
-                {
-                    // XAML 没有正确设置 Child（例如 x:Class / Build Action 配错）时最容易踩到
-                    Debug.WriteLine("[DSPopup] Child is null, check DSPopup.xaml build action (should be Page).");
-                    return;
-                }
-                // 打断上一次尚未结束的淡出，并把透明度复位，否则新消息会半透明地"闪一下"
-                child.BeginAnimation(UIElement.OpacityProperty, null);
-                child.Opacity = 1.0;
-                popup.Message = message;
-                Place(popup, child);
-                popup.IsOpen = true;
-                var timer = _hideTimer ??= new DispatcherTimer();
-                timer.Stop();
-                timer.Interval = duration;
-                timer.Tick -= OnHideTick;
-                timer.Tick += OnHideTick;
-                timer.Start();
-            }
-            catch (Exception ex)
-            {
-                // 提示框失败不应影响业务，但必须留下痕迹，方便定位 XamlParseException 之类的问题
-                Debug.WriteLine("[DSPopup] show failed: " + ex);
-            }
+            var dialog = _dialog ??= new DSPopup();//UI线程运行保证了这个实例由UI线程创建，谁创建谁使用。
+            if (dialog.Child is not UIElement) return;
+            dialog.Message = text;//补足实例的显示信息。
+
+            dialog.Present(duration);//后续不再需要用到text,后续方法都是实例方法，不用担心实例为空。
         }
-        /// <summary>
-        /// 有 WPF 窗口就居中对齐它；没有窗口（WinForms 宿主、启动早期、设计器、单测）
-        /// 就退化为屏幕坐标，保证 Popup 一定能定位、一定看得见。
-        /// </summary>
-        private static void Place(Popup popup, UIElement child)
+        //===================编排=======================
+        private void Present(TimeSpan duration)
         {
-            var owner = FindOwnerWindow();
-            if (owner != null)
-            {
-                popup.PlacementTarget = owner;
-                popup.Placement = PlacementMode.Center;
-                popup.VerticalOffset = owner.ActualHeight > 0 ? owner.ActualHeight / 3.0 : 0.0;
-                return;
-            }
-            // 离线量一次拿真实尺寸（内容是自适应的）
-            child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            var size = child.DesiredSize;
-            var area = SystemParameters.WorkArea;
-            popup.PlacementTarget = null;
-            popup.Placement = PlacementMode.AbsolutePoint;
-            popup.HorizontalOffset = area.Left + Math.Max(0, (area.Width - size.Width) / 2.0);
-            popup.VerticalOffset = area.Top + Math.Max(0, (area.Height - size.Height) / 3.0);
+            var token = ++_generation;//每次展示取得令牌，记录轮次。作废上一轮所有延迟回调。
+
+            ResetVisualState();//视觉复位。
+            DecidePlacement();//确定展示位置。
+
+            var wasOpen = IsOpen;//记录当前打开状态，后期用于判断是否需要执行淡入。
+            IsOpen = true;//打开，准备展示。
+
+            if (!wasOpen&&Child is UIElement child) Animate(child, 0, 1,FadeInTime, null);//之前不是打开状态，做淡入。否则说明上一个消息未结束，不做淡入。
+            ScheduleHide(token,duration);//按计划淡出
         }
-        private static Window? FindOwnerWindow()
+
+        //===================视觉复位=======================
+
+        private void ResetVisualState()
+        {
+            _hideTimer?.Stop();//如果不停，会如何？它有可能让本方法的结果作废吗？如果能，那就必须停。
+
+            if (Child is not UIElement child) return;//作为一个独立可用的方法，这是它操作的前提，即便冗余，也是值得的。
+            child.BeginAnimation(OpacityProperty, null);
+            child.Opacity = 1.0;
+        }
+
+        //===================确定展示位置=======================
+
+        private void DecidePlacement()
+        {
+            Window? owner = FindOwnerWindow();
+            if (owner != null && TryPlaceRelativeToWindow(owner)) return;
+          
+            PlaceAbsoluteToWorkArea();
+           
+        }
+
+        private Window? FindOwnerWindow()
         {
             var app = Application.Current;
-            if (app is null) return null;
-            var windows = app.Windows.OfType<Window>().Where(w => w.IsVisible).ToList();
-            return windows.FirstOrDefault(w => w.IsActive)
-                ?? (app.MainWindow != null && app.MainWindow.IsVisible ? app.MainWindow : null);
+            if (app == null) return null;//WPF世界不存在
+
+            var active=app.Windows.OfType<Window>().Where(w => w.IsVisible && w.IsActive).FirstOrDefault();
+            if (active != null) return active;//WPF世界里激活的窗口
+
+            var main = app.MainWindow;
+            return (main!=null&&main.IsVisible&&main.WindowState!=WindowState.Minimized) ? main:null;//主窗口,且没有最小化
+           
         }
-        private static void OnHideTick(object? sender, EventArgs e)
+        private bool TryPlaceRelativeToWindow(Window? owner)
         {
-            _hideTimer?.Stop();
-            if (_dialog?.Child is not UIElement child) return;
-            var fade = new DoubleAnimation(child.Opacity, 0.0, TimeSpan.FromMilliseconds(250));
-            fade.Completed += (_, _) =>
+            if (owner == null||!owner.IsVisible||owner.WindowState==WindowState.Minimized) return false;
+
+            PlacementTarget = owner;
+            Placement = PlacementMode.Center;
+            HorizontalOffset = 0;
+            VerticalOffset = owner.ActualHeight / 3.0;
+            return true;
+        }
+
+        private void PlaceAbsoluteToWorkArea()
+        {
+            var workArea = SystemParameters.WorkArea;
+            var size=MeasureContent();
+
+            PlacementTarget = null;
+            Placement = PlacementMode.Absolute;
+            HorizontalOffset =workArea.Left+ Math.Max(0, workArea.Width - size.Width)/2.0;
+            VerticalOffset =workArea.Top+ Math.Max(0,workArea.Height-size.Height)/2.0;
+        }
+
+        private Size MeasureContent()
+        {
+            if (Child is not UIElement child) return Size.Empty;
+            
+            child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            return child.DesiredSize;
+        }
+
+        //===================动画淡入淡出=======================
+
+        private void Animate(UIElement target, double from, double to,TimeSpan duration, Action? onCompleted=null)
+        {
+            var animation = new DoubleAnimation(from, to,new Duration(duration))
             {
-                child.BeginAnimation(UIElement.OpacityProperty, null);
-                child.Opacity = 1.0;
-                if (_dialog is null) return;
-                _dialog.IsOpen = false;
-                _dialog.Message = string.Empty;
+                EasingFunction = new QuadraticEase()
+                {
+                    EasingMode = from > to ? EasingMode.EaseOut : EasingMode.EaseIn//让明暗对比强烈处更平缓
+                }
             };
-            child.BeginAnimation(UIElement.OpacityProperty, fade);
+            if (onCompleted != null) animation.Completed += (s, e) => onCompleted();
+           
+            target.BeginAnimation(OpacityProperty, animation);
+        }
+        //===================计划淡出=======================
+        private void ScheduleHide(int token, TimeSpan duration)
+        {
+            if (_hideTimer == null)
+            {
+                _hideTimer = new DispatcherTimer(DispatcherPriority.Normal);
+                _hideTimer.Tick += OnHideTick;
+            }
+            _hideTimer.Stop();
+            _hideTimer.Interval = duration;
+            _pendingToken = token;//延迟动作开始之前，记录token值。后续真正想比较的仍是token与_generation，
+                                  //但困难在于这个token无法传递到OnHideTick中，所以用_pendingToken保存一下。
+            _hideTimer.Start();
+        }
+
+        private void OnHideTick(object? sender, EventArgs e)
+        {
+            _hideTimer?.Stop();//只需要用时钟的第一次间隔。
+            if (_generation != _pendingToken) return;//计时器开始了，经历了interval的延时时间，
+                                                     //需要与出发时比较。现在_generation有新值了，
+                                                     //说明有新的present执行，把上次未完的延迟动作丢弃。
+
+            BeginHide();
+        }
+
+        private void BeginHide()
+        {
+            if (Child is not UIElement child) //防御性编程
+            {
+                IsOpen = false;
+                return;
+            }
+            var token = _generation;//开始延时动作前，先记录令牌，用于动画结束后的处理方法中。
+            Animate(child, 1, 0, FadeOutTime,
+                () =>
+                {
+                    if (token!=_generation ) return;//令牌值改变了，说明又有新消息了，放弃掉未完成的延时动作。
+                    child.BeginAnimation(OpacityProperty, null);
+                    child.Opacity = 0;
+                    IsOpen = false;
+                }
+            
+                );//此处的onCompleted方法中，需要能用上token，所以用lambda更简单，否则需要把token作为参数带过去。还需要用上child.
         }
     }
 }
