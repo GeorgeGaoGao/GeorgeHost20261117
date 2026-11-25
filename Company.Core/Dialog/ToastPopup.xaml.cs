@@ -26,8 +26,8 @@ namespace Company.Core.Dialog
         //===============可调参数======================
         //不变，事实上是常量，用PASCAL命名。
         private static readonly TimeSpan MinVisible = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan FadeInTime = TimeSpan.FromMilliseconds(2000);
-        private static readonly TimeSpan FadeOutTime = TimeSpan.FromMilliseconds(2000);
+        private static readonly TimeSpan FadeInTime = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan FadeOutTime = TimeSpan.FromMilliseconds(500);
         //===============单例状态======================
         private static ToastPopup? _dialog;
         //===============实例状态======================

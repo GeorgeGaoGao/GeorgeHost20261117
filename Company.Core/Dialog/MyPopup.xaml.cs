@@ -8,6 +8,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -22,14 +23,14 @@ namespace Company.Core.Dialog
     {
         //=================可调参数=========================
         private static readonly TimeSpan MinVisible = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan FadeInTime=TimeSpan.FromMilliseconds(500);
-        private static readonly TimeSpan FadeOutTime=TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan FadeInTime = TimeSpan.FromMilliseconds(5000);
+        private static readonly TimeSpan FadeOutTime = TimeSpan.FromMilliseconds(5000);
         //=================单例状态=========================
         private static MyPopup? _dialog;
         //=================实例状态=========================
         private int _generation;
         private int _pendingToken;
-        private DispatcherTimer _hideTimer;
+        private DispatcherTimer? _hideTimer;
         //=================依赖属性=========================
 
 
@@ -58,7 +59,7 @@ namespace Company.Core.Dialog
             return text.Length > 0;
         }
 
-        
+
         //=================UI线程运行=========================
 
         private static void RunOnUiThread(Action action)
@@ -83,9 +84,9 @@ namespace Company.Core.Dialog
             var popup = _dialog ??= new MyPopup();
             if (popup.Child is not UIElement child) return;
             popup.Message = text;
-            child.Opacity = 0;
-            popup.IsOpen = false;
-            popup.StaysOpen = true;
+            //child.Opacity = 1;//这个更不应该改变，实际上如果动画没执行完，改也改不了。
+            //popup.IsOpen = false;//不要更改这个值，上次没完成的延迟还是true,新一次的改false,就会闪一次。
+            //popup.StaysOpen = true;//这个值不必放在代码里，放在XAML里，鼠标点击不会消失。
 
             popup.Present(timeSpan);
         }
@@ -97,10 +98,17 @@ namespace Company.Core.Dialog
             ResetVisualState();
             DecidePlacement();
 
+            var wasOpen = IsOpen;
             IsOpen = true;
-            Animate(0, 1, FadeInTime, onCompleted);
-            ScheduleHide(token,timeSpan);
+            if (!wasOpen&&Child is UIElement child)
+            {
+                Animate(child, 0, 1, FadeInTime, null);
+            }
+            ScheduleHide(token, timeSpan);
         }
+
+
+
         //=================恢复视觉=========================
 
         private void ResetVisualState()
@@ -108,7 +116,7 @@ namespace Company.Core.Dialog
             if (Child is not UIElement child) return;
 
             child.BeginAnimation(OpacityProperty, null);
-            child.Opacity = 0;
+            child.Opacity = 1.0;//每次重置时，改为1，而不是0，可以应对上次没结束而产生的闪烁。
         }
 
         //=================决定位置=========================
@@ -120,7 +128,7 @@ namespace Company.Core.Dialog
             if (owner != null && TryPlaceRelativeToWindow(owner)) return;
 
             PlaceAbsoluteOnWorkArea();
-            
+
         }
 
         private Window? FindOwnerWindow()
@@ -137,7 +145,7 @@ namespace Company.Core.Dialog
             {
                 return null;
             }
-           
+
         }
 
         private bool TryPlaceRelativeToWindow(Window owner)
@@ -160,7 +168,7 @@ namespace Company.Core.Dialog
             PlacementTarget = null;
             Placement = PlacementMode.Absolute;
             HorizontalOffset = workArea.Left + Math.Max(0, (workArea.Width - size.Width) / 2);
-            VerticalOffset=workArea.Top+Math.Max(0,(workArea.Height - size.Height)/2);
+            VerticalOffset = workArea.Top + Math.Max(0, (workArea.Height - size.Height) / 2);
         }
 
         private Size MeasureContent()
@@ -171,21 +179,64 @@ namespace Company.Core.Dialog
         }
 
         //=================淡入淡出=========================
-
-        private void Animate(int v1, int v2, TimeSpan fadeInTime, object onCompleted)
+        private void Animate(UIElement target, double from, double to, TimeSpan timeSpan, Action? onCompleted)
         {
-            throw new NotImplementedException();
+            var animation = new DoubleAnimation(from, to, timeSpan)
+            {
+                EasingFunction = new QuadraticEase()
+                {
+                    EasingMode = from > to ? EasingMode.EaseIn : EasingMode.EaseOut
+                }
+            };
+            if (onCompleted != null)
+            {
+                animation.Completed += (s, e) => onCompleted();
+            }
+            target.BeginAnimation(OpacityProperty, animation);
         }
+
 
         //=================计时隐藏=========================
         private void ScheduleHide(int token, TimeSpan timeSpan)
         {
-            throw new NotImplementedException();
+            _pendingToken = token;//为completed延迟处理方法用。
+
+            if (_hideTimer==null)
+            {
+                _hideTimer = new DispatcherTimer(DispatcherPriority.Normal);
+                _hideTimer.Tick += OnHideTick;
+            }
+            _hideTimer.Stop();
+            _hideTimer.Interval = timeSpan;
+            _hideTimer.Start();
+        }
+
+        private void OnHideTick(object? sender, EventArgs e)
+        {
+            if (_generation != _pendingToken) return;//说明interval时间之后，有新的present，则废弃未完成的延时动作。
+            _hideTimer?.Stop();
+            BeginHide();
+        }
+
+        private void BeginHide()
+        {
+            var token = _generation;
+            if (Child is not UIElement child) return;
+            Animate(child, 1, 0, FadeOutTime,
+                () =>
+                {
+                    if (_generation != token) return;//说明在动画执行期间产生了新的present，应废弃未完成的延时动作。
+                    child.BeginAnimation(OpacityProperty, null);
+                    child.Opacity = 0;
+                    IsOpen = false;
+                }
+
+                );
         }
 
 
 
-        
+
         //=================可调参数=========================
         //=================可调参数=========================
         //=================可调参数=========================
@@ -193,6 +244,7 @@ namespace Company.Core.Dialog
         public MyPopup()
         {
             InitializeComponent();
+            DataContext = this;
         }
     }
 }
