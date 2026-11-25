@@ -28,7 +28,7 @@ namespace Company.Applications.Login.ViewModels
         {
             if (string.IsNullOrEmpty(CurrentUser.Name) || string.IsNullOrEmpty(CurrentUser.Password))
             {
-                PopupBox.ShowPopup("用户名或密码不能为空");
+                MyPopup.Show("用户名或密码不能为空",TimeSpan.FromSeconds(2));
                 return;
             }
             if (CurrentUser.Name == "Admin" && CurrentUser.Password == "123456")
