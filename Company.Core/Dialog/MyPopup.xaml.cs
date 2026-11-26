@@ -23,8 +23,8 @@ namespace Company.Core.Dialog
     {
         //=================可调参数=========================
         private static readonly TimeSpan MinVisible = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan FadeInTime = TimeSpan.FromMilliseconds(5000);
-        private static readonly TimeSpan FadeOutTime = TimeSpan.FromMilliseconds(5000);
+        private static readonly TimeSpan FadeInTime = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan FadeOutTime = TimeSpan.FromMilliseconds(500);
         //=================单例状态=========================
         private static MyPopup? _dialog;
         //=================实例状态=========================

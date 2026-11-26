@@ -23,9 +23,9 @@ namespace Company.Core.Dialog
     public partial class DSPopup : Popup
     {
         //===================可调参数=======================
-        private static TimeSpan MinVisible = TimeSpan.FromSeconds(1);
-        private static TimeSpan FadeInTime = TimeSpan.FromMilliseconds(500);
-        private static TimeSpan FadeOutTime = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan MinVisible = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan FadeInTime = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan FadeOutTime = TimeSpan.FromMilliseconds(500);
         //===================单例状态=======================
         private static DSPopup? _dialog;
         //===================实例状态=======================
@@ -54,6 +54,11 @@ namespace Company.Core.Dialog
             StaysOpen = true;//不会因范围外占击鼠标而关闭。
         }
         //===================对外契约=======================
+        /// <summary>
+        /// 对外契约
+        /// </summary>
+        /// <param name="message">显示信息</param>
+        /// <param name="timeSpan">完全显示时间</param>
         public static void Show(string message, TimeSpan timeSpan)
         {
             if (!TryNormalizeParameters(message, timeSpan, out string text, out TimeSpan duration)) return;
@@ -106,9 +111,14 @@ namespace Company.Core.Dialog
             DecidePlacement();//确定展示位置。
 
             var wasOpen = IsOpen;//记录当前打开状态，后期用于判断是否需要执行淡入。
-            IsOpen = true;//打开，准备展示。
 
-            if (!wasOpen&&Child is UIElement child) Animate(child, 0, 1,FadeInTime, null);//之前不是打开状态，做淡入。否则说明上一个消息未结束，不做淡入。
+            if (!wasOpen && Child is UIElement child) 
+            {
+                child.Opacity = 0;
+                IsOpen = true;
+                Animate(child, 0, 1, FadeInTime);
+            }
+            IsOpen = true;
             ScheduleHide(token,duration);//按计划淡出
         }
 
@@ -231,6 +241,7 @@ namespace Company.Core.Dialog
                     child.BeginAnimation(OpacityProperty, null);
                     child.Opacity = 0;
                     IsOpen = false;
+                    PlacementTarget = null;//释放对窗口的引用。
                 }
             
                 );//此处的onCompleted方法中，需要能用上token，所以用lambda更简单，否则需要把token作为参数带过去。还需要用上child.
