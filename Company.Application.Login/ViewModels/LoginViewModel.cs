@@ -9,6 +9,8 @@ using ReactiveUI.SourceGenerators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace Company.Applications.Login.ViewModels
@@ -24,7 +26,7 @@ namespace Company.Applications.Login.ViewModels
         }
           
 
-        private void OnLoginCommand()
+        private async void OnLoginCommand()
         {
             if (string.IsNullOrEmpty(CurrentUser.Name) || string.IsNullOrEmpty(CurrentUser.Password))
             {
@@ -38,11 +40,18 @@ namespace Company.Applications.Login.ViewModels
             else
             {
                 //PopupBox.ShowPopup("用户名或密码错误");
-                //GeorgePopup.Show("用户名或密码错误",TimeSpan.FromSeconds(2));
-                MyPopup.Show("用户名或密码错误", TimeSpan.FromSeconds(2));
-                DSPopup.Show("用户名或密码错误", TimeSpan.FromSeconds(2));
+                //GeorgePopup.Show("用户名或密码错误", TimeSpan.FromSeconds(2));
+                //MyPopup.Show("用户名或密码错误", TimeSpan.FromSeconds(2));
+                //DSPopup.Show("用户名或密码错误", TimeSpan.FromSeconds(2));
                 //ToastPopup.Show("用户名或密码错误", TimeSpan.FromSeconds(2));
                 //DSPopup.Show("用户名或密码错误",TimeSpan.FromSeconds(2));
+
+                BusyIndicator.Begin();
+                await Task.Delay(200);
+                BusyIndicator.Begin();
+                await Task.Delay(2100);
+               
+                BusyIndicator.End();
             }
         }
     }
